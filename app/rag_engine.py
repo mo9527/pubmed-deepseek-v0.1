@@ -1,7 +1,7 @@
 import numpy as np
-from embedding import embed_text
-from pubmed_client import search_pubmed
-from deepseek_client import ask_deepseek
+from app.embedding import embed_text
+from app.pubmed_client import search_pubmed
+from app.deepseek_client import ask_deepseek
 
 def cosine_sim(a, b):
     return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))

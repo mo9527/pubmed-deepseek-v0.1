@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepSeek 聊天</title>
+    <script src="./marked.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: #0f0f0f;
+            color: #e0e0e0;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .main-container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            flex: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .references-sidebar {
+            width: 320px;
+            background: #1a1a1a;
+            border-left: 1px solid #2a2a2a;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .references-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #2a2a2a;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .references-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .reference-item {
+            background: #2a2a2a;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            border: 1px solid #3a3a3a;
+            transition: all 0.2s;
+            scroll-margin-top: 16px;
+        }
+
+        .reference-item:hover {
+            border-color: #667eea;
+        }
+
+        .reference-item.highlight {
+            border-color: #667eea;
+            background: #2a2a3a;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+        }
+
+        .reference-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        .reference-pmid {
+            font-size: 12px;
+            color: #667eea;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .reference-title {
+            font-size: 14px;
+            line-height: 1.5;
+            color: #e0e0e0;
+        }
+
+        .references-empty {
+            text-align: center;
+            color: #666;
+            padding: 40px 20px;
+            font-size: 14px;
+        }
+
+        .references-sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .references-sidebar::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+
+        .references-sidebar::-webkit-scrollbar-thumb {
+            background: #3a3a3a;
+            border-radius: 3px;
+        }
+
+        .chat-header {
+            background: #1a1a1a;
+            padding: 16px 24px;
+            border-bottom: 1px solid #2a2a2a;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .message {
+            display: flex;
+            gap: 16px;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .message.user .message-avatar {
+            background: #667eea;
+            color: white;
+        }
+
+        .message.assistant .message-avatar {
+            background: #2a2a2a;
+            color: #667eea;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            line-height: 1.6;
+            word-wrap: break-word;
+        }
+
+        .message-content .ref-mark {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #4a4a4a;
+            color: #e0e0e0;
+            padding: 2px 6px;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: 500;
+            margin: 0 2px;
+            cursor: pointer;
+            transition: all 0.2s;
+            vertical-align: baseline;
+            min-width: 20px;
+            height: 20px;
+        }
+
+        .message-content .ref-mark:hover {
+            background: #5a5a5a;
+            color: #ffffff;
+        }
+
+        .message-content .ref-mark:active {
+            transform: scale(0.95);
+        }
+
+        /* Markdown 样式 */
+        .message-content h1,
+        .message-content h2,
+        .message-content h3,
+        .message-content h4,
+        .message-content h5,
+        .message-content h6 {
+            margin-top: 1em;
+            margin-bottom: 0.5em;
+            font-weight: 600;
+            line-height: 1.25;
+        }
+
+        .message-content h1 {
+            font-size: 1.5em;
+            border-bottom: 1px solid #3a3a3a;
+            padding-bottom: 0.3em;
+        }
+
+        .message-content h2 {
+            font-size: 1.3em;
+            border-bottom: 1px solid #3a3a3a;
+            padding-bottom: 0.3em;
+        }
+
+        .message-content h3 {
+            font-size: 1.1em;
+        }
+
+        .message-content p {
+            margin: 0.5em 0;
+        }
+
+        .message-content ul,
+        .message-content ol {
+            margin: 0.5em 0;
+            padding-left: 1.5em;
+        }
+
+        .message-content li {
+            margin: 0.25em 0;
+        }
+
+        .message-content code {
+            background: #2a2a2a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .message-content pre {
+            background: #2a2a2a;
+            padding: 12px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 0.5em 0;
+        }
+
+        .message-content pre code {
+            background: transparent;
+            padding: 0;
+        }
+
+        .message-content blockquote {
+            border-left: 3px solid #667eea;
+            padding-left: 1em;
+            margin: 0.5em 0;
+            color: #b0b0b0;
+        }
+
+        .message-content table {
+            border-collapse: collapse;
+            margin: 0.5em 0;
+            width: 100%;
+        }
+
+        .message-content th,
+        .message-content td {
+            border: 1px solid #3a3a3a;
+            padding: 6px 12px;
+            text-align: left;
+        }
+
+        .message-content th {
+            background: #2a2a2a;
+            font-weight: 600;
+        }
+
+        .message-content a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .message-content a:hover {
+            text-decoration: underline;
+        }
+
+        .message-content strong {
+            font-weight: 600;
+        }
+
+        .message-content em {
+            font-style: italic;
+        }
+
+        .message-content hr {
+            border: none;
+            border-top: 1px solid #3a3a3a;
+            margin: 1em 0;
+        }
+
+        .message.user .message-content {
+            background: #667eea;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.assistant .message-content {
+            background: #1a1a1a;
+            color: #e0e0e0;
+            border: 1px solid #2a2a2a;
+            border-bottom-left-radius: 4px;
+        }
+
+        .input-container {
+            background: #1a1a1a;
+            border-top: 1px solid #2a2a2a;
+            padding: 16px 24px;
+        }
+
+        .input-wrapper {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .input-box {
+            flex: 1;
+            background: #2a2a2a;
+            border: 1px solid #3a3a3a;
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: #e0e0e0;
+            font-size: 15px;
+            font-family: inherit;
+            resize: none;
+            min-height: 24px;
+            max-height: 200px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .input-box:focus {
+            border-color: #667eea;
+        }
+
+        .input-box::placeholder {
+            color: #666;
+        }
+
+        .send-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+
+        .send-button:hover:not(:disabled) {
+            background: #5568d3;
+        }
+
+        .send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 12px 16px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #667eea;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.7;
+            }
+            30% {
+                transform: translateY(-10px);
+                opacity: 1;
+            }
+        }
+
+        /* 滚动条样式 */
+        .messages-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .messages-container::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb {
+            background: #3a3a3a;
+            border-radius: 4px;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb:hover {
+            background: #4a4a4a;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="chat-container">
+            <div class="chat-header">
+                <div class="logo">DS</div>
+                <div class="header-title">DeepSeek Chat</div>
+            </div>
+
+            <div class="messages-container" id="messagesContainer">
+                <div class="message assistant">
+                    <div class="message-avatar">AI</div>
+                    <div class="message-content">
+                        你好！我是 DeepSeek，有什么可以帮助你的吗？
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-container">
+                <div class="input-wrapper">
+                    <textarea 
+                        id="messageInput" 
+                        class="input-box" 
+                        placeholder="输入消息..."
+                        rows="1"
+                    ></textarea>
+                    <button id="sendButton" class="send-button">发送</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="references-sidebar" id="referencesSidebar">
+            <div class="references-header">引用文献</div>
+            <div class="references-list" id="referencesList">
+                <div class="references-empty">暂无引用文献</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const messagesContainer = document.getElementById('messagesContainer');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const referencesList = document.getElementById('referencesList');
+
+        // 自动调整输入框高度
+        messageInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+        });
+
+        // API接口地址
+        const API_URL = 'http://localhost:7001/ask/stream';
+
+        // 发送消息
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message) return;
+
+            // 添加用户消息
+            addMessage('user', message);
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+
+            // 禁用发送按钮
+            sendButton.disabled = true;
+
+            // 显示打字指示器
+            const typingIndicator = showTypingIndicator();
+
+            try {
+                // 调用API接口
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        question: message
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                // 移除打字指示器
+                removeTypingIndicator(typingIndicator);
+
+                // 创建AI消息容器
+                const aiMessageDiv = createAIMessageContainer();
+                messagesContainer.appendChild(aiMessageDiv);
+                scrollToBottom();
+
+                // 清空引用列表
+                clearReferences();
+
+                // 读取流式响应
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, { stream: true });
+                    
+                    // 按行分割处理
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop() || ''; // 保留最后一个不完整的行
+
+                    for (const line of lines) {
+                        if (!line.trim()) continue;
+                        
+                        let content = line.trim();
+                        
+                        // 处理SSE格式：data: {...} 或 data: [DONE]
+                        if (content.startsWith('data: ')) {
+                            content = content.substring(6); // 去掉 "data: " 前缀
+                        }
+                        
+                        // 检查是否是结束标记
+                        if (content === '[DONE]') {
+                            continue;
+                        }
+                        
+                        try {
+                            // 解析JSON格式：{"type": "answer", "data": "..."} 或 {"type": "references", "data": [...]}
+                            const data = JSON.parse(content);
+                            
+                            // 处理不同类型的数据
+                            if (data.type === 'answer' && data.data) {
+                                // 答案类型，追加到消息中
+                                const text = String(data.data);
+                                if (text) {
+                                    appendToAIMessage(aiMessageDiv, text);
+                                }
+                            } else if (data.type === 'references' && Array.isArray(data.data)) {
+                                // 引用类型，更新引用列表
+                                updateReferences(data.data);
+                            } else if (data.token !== undefined && data.token !== null) {
+                                // 兼容旧的token格式
+                                const token = String(data.token);
+                                if (token) {
+                                    appendToAIMessage(aiMessageDiv, token);
+                                }
+                            }
+                        } catch (e) {
+                            // 如果解析失败，记录警告（但不在控制台显示，避免刷屏）
+                            // console.warn('Failed to parse line:', line);
+                        }
+                    }
+                }
+
+                // 处理剩余的buffer
+                if (buffer.trim()) {
+                    let content = buffer.trim();
+                    
+                    // 处理SSE格式：data: {...} 或 data: [DONE]
+                    if (content.startsWith('data: ')) {
+                        content = content.substring(6); // 去掉 "data: " 前缀
+                    }
+                    
+                    // 检查是否是结束标记
+                    if (content === '[DONE]') {
+                        // 结束标记，不做处理
+                    } else {
+                        try {
+                            const data = JSON.parse(content);
+                            
+                            // 处理不同类型的数据
+                            if (data.type === 'answer' && data.data) {
+                                const text = String(data.data);
+                                if (text) {
+                                    appendToAIMessage(aiMessageDiv, text);
+                                }
+                            } else if (data.type === 'references' && Array.isArray(data.data)) {
+                                updateReferences(data.data);
+                            } else if (data.token !== undefined && data.token !== null) {
+                                const token = String(data.token);
+                                if (token) {
+                                    appendToAIMessage(aiMessageDiv, token);
+                                }
+                            }
+                        } catch (e) {
+                            // 忽略解析错误
+                        }
+                    }
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                removeTypingIndicator(typingIndicator);
+                addMessage('assistant', `抱歉，发生了错误：${error.message}`);
+            } finally {
+                sendButton.disabled = false;
+            }
+        }
+
+        // 添加消息到聊天界面
+        function addMessage(role, content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.textContent = role === 'user' ? '你' : 'AI';
+            
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            messageContent.textContent = content;
+            
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(messageContent);
+            
+            messagesContainer.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        // 显示打字指示器
+        function showTypingIndicator() {
+            const indicator = document.createElement('div');
+            indicator.className = 'message assistant';
+            indicator.id = 'typingIndicator';
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.textContent = 'AI';
+            
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message-content typing-indicator';
+            typingDiv.innerHTML = `
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            `;
+            
+            indicator.appendChild(avatar);
+            indicator.appendChild(typingDiv);
+            messagesContainer.appendChild(indicator);
+            scrollToBottom();
+            
+            return indicator;
+        }
+
+        // 移除打字指示器
+        function removeTypingIndicator(indicator) {
+            if (indicator && indicator.parentNode) {
+                indicator.parentNode.removeChild(indicator);
+            }
+        }
+
+        // 滚动到底部
+        function scrollToBottom() {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // 创建AI消息容器（用于流式显示）
+        function createAIMessageContainer() {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message assistant';
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.textContent = 'AI';
+            
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            messageContent.textContent = '';
+            messageContent.setAttribute('data-raw-text', ''); // 初始化原始文本存储
+            
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(messageContent);
+            
+            return messageDiv;
+        }
+
+        // 处理文本中的引用标记，将 [ref:数字] 替换为可点击的引用标记
+        function processRefMarks(text) {
+            // 匹配 [ref:数字] 格式
+            const refPattern = /\[ref:(\d+)\]/g;
+            return text.replace(refPattern, (match, refNum) => {
+                return `<span class="ref-mark" data-ref="${refNum}" onclick="scrollToReference(${refNum})">${refNum}</span>`;
+            });
+        }
+
+        // 渲染 Markdown 内容
+        function renderMarkdown(text) {
+            if (typeof marked !== 'undefined') {
+                // 配置 marked 选项（每次调用时配置，确保已加载）
+                marked.setOptions({
+                    breaks: true, // 支持 GitHub 风格的换行
+                    gfm: true, // 启用 GitHub 风格的 Markdown
+                });
+                
+                // 先处理引用标记
+                const textWithRefs = processRefMarks(text);
+                // 然后渲染 Markdown（marked 会保留 HTML 标签）
+                return marked.parse(textWithRefs);
+            } else {
+                // 如果没有 marked 库，只处理引用标记
+                return processRefMarks(text);
+            }
+        }
+
+        // 追加内容到AI消息（流式更新）
+        function appendToAIMessage(messageDiv, text) {
+            const messageContent = messageDiv.querySelector('.message-content');
+            if (messageContent) {
+                // 从 data 属性获取原始文本，如果没有则从 textContent 获取
+                let currentText = messageContent.getAttribute('data-raw-text');
+                if (!currentText) {
+                    // 如果没有 data-raw-text，尝试从 textContent 获取（去除HTML标签）
+                    currentText = messageContent.textContent || '';
+                }
+                
+                const newText = currentText + text;
+                // 保存原始文本到 data 属性
+                messageContent.setAttribute('data-raw-text', newText);
+                
+                // 渲染 Markdown 并处理引用标记
+                messageContent.innerHTML = renderMarkdown(newText);
+                scrollToBottom();
+            }
+        }
+
+        // 存储当前会话的引用列表
+        let currentReferences = [];
+
+        // 清空引用列表
+        function clearReferences() {
+            currentReferences = [];
+            referencesList.innerHTML = '<div class="references-empty">暂无引用文献</div>';
+        }
+
+        // 更新引用列表
+        function updateReferences(references) {
+            if (!Array.isArray(references) || references.length === 0) {
+                // 如果传入空数组，不清空，保留现有引用
+                return;
+            }
+
+            // 合并新的引用到现有列表（去重，基于pmid）
+            references.forEach(ref => {
+                const existingIndex = currentReferences.findIndex(r => r.pmid === ref.pmid);
+                if (existingIndex === -1) {
+                    // 新引用，添加到列表
+                    currentReferences.push(ref);
+                } else {
+                    // 已存在，更新内容
+                    currentReferences[existingIndex] = ref;
+                }
+            });
+
+            // 重新渲染引用列表
+            renderReferences();
+        }
+
+        // 渲染引用列表
+        function renderReferences() {
+            if (currentReferences.length === 0) {
+                referencesList.innerHTML = '<div class="references-empty">暂无引用文献</div>';
+                return;
+            }
+
+            // 清空现有内容
+            referencesList.innerHTML = '';
+
+            // 添加每个引用
+            currentReferences.forEach((ref, index) => {
+                const refItem = document.createElement('div');
+                refItem.className = 'reference-item';
+                refItem.id = `ref-${index + 1}`; // 添加ID，用于跳转
+                
+                // 添加引用编号
+                const refNumber = document.createElement('span');
+                refNumber.className = 'reference-number';
+                refNumber.textContent = index + 1;
+                
+                const pmid = document.createElement('div');
+                pmid.className = 'reference-pmid';
+                pmid.appendChild(refNumber);
+                const pmidText = document.createTextNode(ref.pmid ? ` PMID: ${ref.pmid}` : '');
+                pmid.appendChild(pmidText);
+                
+                const title = document.createElement('div');
+                title.className = 'reference-title';
+                title.textContent = ref.title || ref.content || '无标题';
+                
+                refItem.appendChild(pmid);
+                refItem.appendChild(title);
+                referencesList.appendChild(refItem);
+            });
+        }
+
+        // 跳转到指定的引用项
+        function scrollToReference(refNum) {
+            const refItem = document.getElementById(`ref-${refNum}`);
+            if (refItem) {
+                // 移除之前的高亮
+                document.querySelectorAll('.reference-item.highlight').forEach(item => {
+                    item.classList.remove('highlight');
+                });
+                
+                // 添加高亮
+                refItem.classList.add('highlight');
+                
+                // 滚动到引用项
+                refItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // 3秒后移除高亮
+                setTimeout(() => {
+                    refItem.classList.remove('highlight');
+                }, 3000);
+            }
+        }
+
+        // 将函数暴露到全局作用域，以便onclick可以调用
+        window.scrollToReference = scrollToReference;
+
+        // 绑定发送按钮
+        sendButton.addEventListener('click', sendMessage);
+
+        // 绑定回车键发送（Shift+Enter换行）
+        messageInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // 聚焦输入框
+        messageInput.focus();
+    </script>
+</body>
+</html>
