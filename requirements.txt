@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+requests
+biopython
+sentence-transformers
+torch
+numpy
