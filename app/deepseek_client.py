@@ -2,7 +2,7 @@ import requests
 import os
 import json
 
-DEEPSEEK_API_KEY = 'sk-e34510b96b574604a49a1b044b17e5be'
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
 DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"
 
 def ask_deepseek(prompt: str):

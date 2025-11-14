@@ -2,7 +2,7 @@ import requests
 import os
 import json
 
-DOUBAO_API_KEY = 'b846f1f3-c23b-4d52-aa4a-1bac5e420488'
+DOUBAO_API_KEY = os.getenv("DOUBAO_API_KEY")
 DOUBAO_API_URL = "https://ark.cn-beijing.volces.com/api/v3/chat/completions"
 MODE_ID = 'deepseek-v3-1-250821'
 

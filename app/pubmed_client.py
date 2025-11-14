@@ -1,8 +1,10 @@
 from Bio import Entrez
 import xml.etree.ElementTree as ET
+import os
 
-Entrez.email = "wanyihealife@163.com"  # 替换为你的邮箱
-Entrez.api_key = "d2aa4ea868834376d698ac2313cf69cdd608"
+Entrez.email = os.getenv("PUBMED_EMAIL")
+Entrez.api_key = os.getenv("PUBMED_API_KEY")
+
 
 def search_pubmed(query, retmax=10):
     handle = Entrez.esearch(db="pubmed", term=query, retmax=retmax, sort="relevance")
