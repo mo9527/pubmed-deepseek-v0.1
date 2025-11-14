@@ -31,6 +31,10 @@ app.mount(
     name="static"
 )
 
+@app.get("/favicon.ico")
+def favicon():
+    return ""
+
 
 @app.post("/ask", response_model=AnswerResponse)
 def ask_question(req: QueryRequest):
