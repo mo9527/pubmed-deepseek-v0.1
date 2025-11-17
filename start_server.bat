@@ -12,7 +12,7 @@ if exist venv\Scripts\activate.bat (
     echo [WARN] Virtual environment not found. Starting without venv.
 )
 
-REM set envs
+REM set envs sk-808205629ed44c8ea749042ecd3b0261
 set DEEPSEEK_API_KEY=sk-e34510b96b574604a49a1b044b17e5be
 set DOUBAO_API_KEY=b846f1f3-c23b-4d52-aa4a-1bac5e420488
 set PUBMED_EMAIL=wanyihealife@163.com

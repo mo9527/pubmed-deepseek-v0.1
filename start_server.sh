@@ -4,14 +4,9 @@ if ! command -v uvicorn >/dev/null 2>&1; then
   pip install uvicorn fastapi > /dev/null
 fi
 
-if [ -f "requirements.txt" ]; then
-  echo "install project dependencies..."
-  pip install -r requirements.txt
-fi
-
 echo "Start PubMed+DeepSeek API service..."
 
-#set envs
+#set envs sk-808205629ed44c8ea749042ecd3b0261
 export DEEPSEEK_API_KEY='sk-e34510b96b574604a49a1b044b17e5be'
 export DOUBAO_API_KEY='b846f1f3-c23b-4d52-aa4a-1bac5e420488'
 export PUBMED_EMAIL='wanyihealife@163.com'

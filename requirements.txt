@@ -3,5 +3,8 @@ uvicorn
 requests
 biopython
 sentence-transformers
+FlagEmbedding
 torch
 numpy
+qdrant-client
+lxml

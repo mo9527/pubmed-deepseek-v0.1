@@ -44,7 +44,6 @@ def stream_doubao(prompt: str):
             else:
                 try:
                     chunk = json.loads(data)
-                    print(chunk)
                     delta = chunk["choices"][0]["delta"]
                     if "content" in delta:
                         yield delta["content"]

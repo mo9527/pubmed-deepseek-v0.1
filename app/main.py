@@ -11,8 +11,10 @@ import json
 import asyncio
 from starlette.middleware.cors import CORSMiddleware
 import os
+import app.api.main_api as main_api
 
-app = FastAPI(title="DeepSeek-PubMed Demo")
+
+app = FastAPI(title="DeepSeek-PubMed")
 
 origins = ["*"]
 app.add_middleware(
@@ -31,42 +33,7 @@ app.mount(
     name="static"
 )
 
-@app.get("/favicon.ico")
-def favicon():
-    return ""
-
-
-@app.post("/ask", response_model=AnswerResponse)
-def ask_question(req: QueryRequest):
-    result = generate_answer(req.question)
-    return {
-        "answer": result["answer"],
-        "references": [
-            {"pmid": a["pmid"], "title": a["title"]} for a in result["references"]
-        ]
-    }
-
-@app.post("/ask/stream")
-async def ask_question_stream(req: QueryRequest):
-    # 搜索PubMed
-    articles = search_pubmed(req.question)
-    
-    async def event_generator():
-        top_articles = retrieve_top_articles(req.question, articles)
-        references = json.dumps({'type': 'references', 'data': top_articles}, ensure_ascii=False)
-        yield f"data: {references}\n\n"
-        
-        prompt = build_prompt(req.question, top_articles)
-        for token in stream_doubao(prompt):
-            if token == "[DONE]":
-                yield "data: [DONE]\n\n"
-                break
-            # 每个 token 都转为 JSON 格式发送
-            chunk = json.dumps({'type': 'answer', "data": token}, ensure_ascii=False)
-            yield f"data: {chunk}\n\n"
-            await asyncio.sleep(0)  # 避免阻塞事件循环
-
-    return StreamingResponse(event_generator(), media_type="text/event-stream")
+app.include_router(main_api.router)
 
 
 # if __name__ == "__main__":

@@ -7,7 +7,7 @@ Entrez.api_key = os.getenv("PUBMED_API_KEY")
 
 
 def search_pubmed(query, retmax=10):
-    print('email:', os.getenv("PUBMED_EMAIL"))
+    print('Pubmed Account Email:', os.getenv("PUBMED_EMAIL"))
     
     handle = Entrez.esearch(db="pubmed", term=query, retmax=retmax, sort="relevance")
     record = Entrez.read(handle)
