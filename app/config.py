@@ -1,2 +1,0 @@
-BGE_M3_MODEL_PATH = '/opt/bge-m3'
-BGE_M3_MODEL_NAME = 'BAAI/bge-m3'

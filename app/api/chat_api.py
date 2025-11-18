@@ -9,10 +9,13 @@ from app.deepseek_client import stream_deepseek
 from app.doubao_client import stream_doubao
 import json
 import asyncio
-from starlette.middleware.cors import CORSMiddleware
-import os
+from app.config.config import CONFIG
+from app.app_log import logger
 
-router = APIRouter()
+api_prefix = CONFIG.get('api_prefix')
+router = APIRouter(
+        tags=['main_api']
+    )
 
 
 @router.get("/favicon.ico")
@@ -34,7 +37,6 @@ def ask_question(req: QueryRequest):
 async def ask_question_stream(req: QueryRequest):
     # 搜索PubMed
     articles = search_pubmed(req.question)
-    
     async def event_generator():
         top_articles = retrieve_top_articles(req.question, articles)
         references = json.dumps({'type': 'references', 'data': top_articles}, ensure_ascii=False)

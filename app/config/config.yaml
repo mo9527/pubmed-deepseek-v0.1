@@ -1,0 +1,24 @@
+default: &default
+  log_level: "INFO"
+  log_path: "logs"
+  log_filename: "app.log"
+  timeout_seconds: 60
+  api_prefix: "/api/v1"
+  bge_m3_model:
+    path: /opt/bge-m3
+    name: BAAI/bge-m3
+
+test:
+  <<: *default           # 继承 default 配置
+  log_level: "DEBUG"    # 覆盖 default 配置
+  
+  db_config:
+    url: "mysql+pymysql://${MYSQL_USER}:${MYSQL_PWD}@localhost:3306/med_evidence"
+    port: 3306
+
+prod:
+  <<: *default     
+  log_path: "/var/log/med_evidence"
+  db_config:      
+    url: "db.production.internal"
+    port: 80

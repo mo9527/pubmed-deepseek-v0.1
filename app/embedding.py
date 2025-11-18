@@ -1,11 +1,11 @@
 from sentence_transformers import SentenceTransformer
 import numpy as np
 from typing import List, Union
-import app.config as config
+from app.config.config import CONFIG
 import os
 
-model_path = config.BGE_M3_MODEL_PATH
-model_name = config.BGE_M3_MODEL_NAME
+model_path = CONFIG.get('bge_m3_model').get('path')
+model_name = CONFIG.get('bge_m3_model').get('name')
 # model_path = "D:/bge-m3"
 # model_name = "BAAI/bge-m3"
 

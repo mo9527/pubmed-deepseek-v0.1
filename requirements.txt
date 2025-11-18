@@ -8,3 +8,7 @@ torch
 numpy
 qdrant-client
 lxml
+PyYAML
+pymysql
+sqlalchemy
+alembic
