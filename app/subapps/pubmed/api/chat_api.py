@@ -26,7 +26,7 @@ def favicon():
 @router.post("/ask")
 def ask_question(req: QueryRequest):
     result = generate_answer(req.question)
-    return R.success_data({
+    return R.success({
         "answer": result["answer"],
         "references": [
             {"pmid": a["pmid"], "title": a["title"]} for a in result["references"]

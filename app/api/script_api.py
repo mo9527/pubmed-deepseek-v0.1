@@ -18,10 +18,10 @@ def execute_script(script_name: str, payload: dict):
         main_function = getattr(script_module, "main")
         execution_result = main_function(payload)
         
-        return R.success_data(execution_result)
+        return R.success(execution_result)
     except ModuleNotFoundError:
-        return R.fail_msg(f"模块 '{script_name}' 不存在.")
+        return R.fail(f"模块 '{script_name}' 不存在.")
     except AttributeError as e:
-        return R.fail_msg(str(e))
+        return R.fail(str(e))
     except Exception as e:
-        return R.fail_msg(f'脚本发生未知错误：{str(e)}')
+        return R.fail(f'脚本发生未知错误：{str(e)}')

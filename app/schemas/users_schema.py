@@ -1,10 +1,11 @@
 import re
 from datetime import datetime
+from .base_schema import BaseSchema
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
-class BaseUser(BaseModel):
+class BaseUser(BaseSchema):
     id: int
     mobile: str = Field(..., description="手机号", example="13112345678", min_length=11, max_length=11)
     email: EmailStr | None = Field(description="邮箱", example="admin@qq.com", min_length=5, max_length=30)

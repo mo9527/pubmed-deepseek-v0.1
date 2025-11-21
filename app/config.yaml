@@ -12,7 +12,7 @@ test:
   <<: *default           # 继承 default 配置
   log_level: "DEBUG"    # 覆盖 default 配置
   db_config:
-    url: "mysql+pymysql://${MYSQL_USER}:${MYSQL_PWD}@localhost:3306/med_evidence"
+    url: "mysql+aiomysql://${MYSQL_USER}:${MYSQL_PWD}@localhost:3306/med_evidence"
     port: 3306
   redis_config:
     host: "r-uf61ui38hklc2p06vcpd.redis.rds.aliyuncs.com"
@@ -27,7 +27,7 @@ test:
     password: Wanyi701&
   jwt_config:
     secret: 438qfhy80fvrueiopahafew21fvre94q
-    access_exp: 36000 #单位秒
+    access_exp: 31556952 #单位秒
     refresh_exp: 72000 #单位秒
 
     

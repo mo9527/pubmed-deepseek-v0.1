@@ -1,13 +1,12 @@
 # db.py
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine, AsyncSession
 from sqlalchemy.ext.declarative import declarative_base
+from typing import AsyncGenerator
 import sys
 from app.util.app_log import logger
 
-# ----------------------------------------------------
-# ⚠️ 1. 导入配置模块 (假设 config.py 已经处理了环境选择)
-# ----------------------------------------------------
 try:
     from app.config import CONFIG, CURRENT_ENV
 except ImportError:
@@ -15,18 +14,14 @@ except ImportError:
     sys.exit(1)
 
 
-# --- 2. 数据库连接信息检查 ---
 DATABASE_URL = CONFIG.get('db_config').get('url')
 
 if not DATABASE_URL:
-    logger.error("FATAL ERROR: 'database_url' key is missing in the current environment config.")
+    logger.error("FATAL ERROR: 'database_url' 在配置文件中未找到.")
     sys.exit(1)
 
-# ----------------------------------------------------
-# 3. SQLAlchemy Engine 配置
-# ----------------------------------------------------
 
-# 连接池设置 (推荐用于生产环境 MySQL)
+# 连接池设置 
 POOL_SETTINGS = {
     # pool_pre_ping: True 检查连接是否可用 (防止 MySQL 连接超时断开)
     "pool_pre_ping": True,
@@ -41,60 +36,83 @@ POOL_SETTINGS = {
 # 是否启用 SQL Echo (仅在 DEBUG 环境启用)
 ECHO_SQL = CONFIG.get('log_level', '').upper() == 'DEBUG'
 
+# try:
+#     engine = create_engine(
+#         DATABASE_URL, 
+#         echo=ECHO_SQL,
+#         **POOL_SETTINGS
+#     )
+#     logger.info(f"数据库engine创建成功. 环境: {CURRENT_ENV}")
+
+# except Exception as e:
+#     logger.error(f"FATAL ERROR: Failed to create database engine for URL {DATABASE_URL}. Error: {e}")
+#     sys.exit(1)
+
+
+# # 会话session
+# SessionLocal = sessionmaker(
+#     autocommit=False,       # 事务必须手动提交
+#     autoflush=False,        # 除非提交或查询，否则不会自动将更改刷新到数据库
+#     bind=engine             # 绑定到上面创建的 Engine
+# )
+# logger.info("SessionLocal factory 创建成功.")
+
 try:
-    engine = create_engine(
+    engine = create_async_engine(
         DATABASE_URL, 
-        echo=ECHO_SQL,
+        echo=ECHO_SQL,                 
         **POOL_SETTINGS
     )
-    logger.info(f"Database Engine initialized successfully for environment: {CURRENT_ENV}")
-
+    logger.info(f"数据库engine创建成功. 环境: {CURRENT_ENV}")
 except Exception as e:
-    logger.error(f"FATAL ERROR: Failed to create database engine for URL {DATABASE_URL}. Error: {e}")
-    sys.exit(1)
+    logger.error(f"FATAL ERROR: Failed to create async database engine for URL {DATABASE_URL}. Error: {e}")
 
-
-# ----------------------------------------------------
-# 4. SessionLocal (会话工厂)
-# ----------------------------------------------------
-# SessionLocal 是一个工厂类，用于创建独立的数据库会话。
-# 在 FastAPI 中，应该在每个请求开始时创建一个会话，并在请求结束时关闭。
-SessionLocal = sessionmaker(
-    autocommit=False,       # 事务必须手动提交
-    autoflush=False,        # 除非提交或查询，否则不会自动将更改刷新到数据库
-    bind=engine             # 绑定到上面创建的 Engine
+# 异步 Session 工厂
+AsyncSessionLocal = async_sessionmaker(
+    bind=engine,
+    autocommit=False,
+    autoflush=False,
+    expire_on_commit=False  # 通常用于异步 Session，防止在 commit 后立即访问关系数据时报错
 )
-logger.info("SessionLocal factory created.")
 
 
-# ----------------------------------------------------
-# 5. 模型基类 (Declarative Base)
-# ----------------------------------------------------
 # 所有 ORM 模型都需要继承这个 Base
 Base = declarative_base()
 
 
-def check_db_connection():
-    """测试数据库连接是否可用。"""
-    try:
-        with engine.connect() as connection:
-            connection.execute("SELECT 1")
-        logger.info("Database connection test passed.")
-        return True
-    except Exception as e:
-        logger.error(f"Database connection test failed. Error: {e}")
-        return False
+async def check_db_connection():
+    """测试数据库连接"""
+    async with AsyncSessionLocal() as session:
+        try:
+            await session.execute(text("SELECT 1"))
+            logger.info("数据库连接正常.")
+        except Exception as e:
+            logger.error(f"数据库连接失败: {e}")
+    
+    
+    
 
-def close_connection():
+async def close_connection():
     """关闭数据库连接。"""
-    engine.dispose()
-    logger.info("Database connection closed.")
-
-
+    await engine.dispose()
+    logger.info("数据库连接已关闭.")
+    
+    
+async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
+    """
+    获取异步数据库会话。
+    在请求结束后自动关闭 Session。
+    """
+    async with AsyncSessionLocal() as session:
+        yield session
+        
+        
+        
+        
 __all__ = [
     "Base",
-    "SessionLocal",
+    "AsyncSessionLocal",
     "engine",
     "check_db_connection",
-    "DATABASE_URL"
-]
+    "get_db_session",
+]   

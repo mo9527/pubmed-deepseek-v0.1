@@ -111,7 +111,7 @@ def register_exceptions(app: FastAPI):
         
 def register_routers(app: FastAPI):
         api_dir_path = Path(__file__).parent / API_DIR
-        logger.info(f"Pubmed 子项目开始自动注册路由...")
+        logger.info(f"主项目开始自动注册路由...")
         for file_path in api_dir_path.glob("*.py"):
             if file_path.name == "__init__.py":
                 continue

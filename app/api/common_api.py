@@ -9,4 +9,4 @@ router = APIRouter(
 
 @router.post("/health", response_model=R, description="健康检查")
 async def health(request: Request):
-    return R.success_data({'status': 'ok'})
+    return R.success({'status': 'ok'})
