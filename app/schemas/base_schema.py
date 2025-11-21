@@ -44,7 +44,7 @@ class BaseSchema(BaseModel):
     @field_serializer('*', when_used='always')
     def serialize_datetime_to_timestamp(self, value: Any, info) -> Any:
         """
-        拦截所有字段的序列化，如果字段是 datetime 对象，则转换为时间戳。
+        如果字段是 datetime 对象，则转换为时间戳。
         """
         if isinstance(value, datetime):
             # 将 datetime 对象转换为整数时间戳（秒级）

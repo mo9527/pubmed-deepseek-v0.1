@@ -85,15 +85,8 @@ class UserCreate(BaseModel):
 class UserUpdate(BaseModel):
     id: int
     name: str
-    status: bool | None = True
-    avatar: str | None
-    platform: str | None = False
-    source: str | None = None
-    ext_1: str | None
-    ext_2: str | None
-    ext_3: str | None
-    ext_4: str | None
-    ext_5: str | None
+    avatar: str | None = None
+    platform: str | None = None
 
 
 class UpdatePassword(BaseModel):

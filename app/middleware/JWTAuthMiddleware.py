@@ -6,6 +6,7 @@ from starlette.responses import JSONResponse
 from starlette.types import ASGIApp
 from util.jwt import verify_token
 from schemas.base_schema import R
+from core.ctx import CTX_USER_ID
 import fnmatch
 from util.app_log import logger
 
@@ -42,6 +43,7 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
             token = auth_header.split(" ")[1]
             user_payload = verify_token(token) 
             
+            CTX_USER_ID.set(user_payload.user_id)
             # 存储用户数据到请求的 scope/state ，state是一个dict
             request.state.current_user = user_payload.model_dump()
         except Exception as e:
@@ -53,7 +55,6 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
     
     def in_white_path(self, path:str, white_paths:list[str]) -> bool:
         normalized_path = path.rstrip('/')
-        print(f'path: {path}, white_paths: {white_paths}')
         for pattern in white_paths:
             if fnmatch.fnmatch(normalized_path, pattern):
                 print(f'白名单路径匹配：{path}')

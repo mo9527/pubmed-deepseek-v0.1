@@ -17,8 +17,6 @@ from slowapi.errors import RateLimitExceeded
 from app.core.exceptions import (
     AuthException,
     AuthExcHandle,
-    NotFoundException,
-    DoesNotExistHandle,
     HTTPException,
     HttpExcHandle,
     IntegrityError,
@@ -29,6 +27,7 @@ from app.core.exceptions import (
     ResponseValidationHandle,
     RateLimitHandle,
     GlobalExcHandle,
+    NotFoundHandle
 )
 
 from middleware.JWTAuthMiddleware import JWTAuthMiddleware
@@ -101,8 +100,8 @@ app.mount(
 def register_exceptions(app: FastAPI):
         app.add_exception_handler(Exception, GlobalExcHandle)
         app.add_exception_handler(AuthException, AuthExcHandle)
-        app.add_exception_handler(NotFoundException, DoesNotExistHandle)
         app.add_exception_handler(HTTPException, HttpExcHandle)
+        app.add_exception_handler(404, NotFoundHandle)
         app.add_exception_handler(IntegrityError, IntegrityHandle)
         app.add_exception_handler(RequestValidationError, RequestValidationHandle)
         app.add_exception_handler(ResponseValidationError, ResponseValidationHandle)

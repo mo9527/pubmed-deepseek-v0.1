@@ -1,10 +1,11 @@
 
 from datetime import datetime, date
 from sqlalchemy import inspect
+from pydantic import BaseModel
 
 class ModelUtil:
     @staticmethod    
-    def model_to_schema(model_obj, schema_cls):
+    def model_to_schema(model_obj, schema_cls:BaseModel):
         """
         将 SQLAlchemy 模型对象转换为schema。
         """

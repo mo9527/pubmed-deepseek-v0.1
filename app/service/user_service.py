@@ -8,7 +8,7 @@ from database.db import get_db_session
 from sqlalchemy.ext.asyncio import AsyncSession
 from util.model_util import ModelUtil
 from schemas.base_schema import Page
-
+from core.ctx import CTX_USER_ID
 
 
 class UserService:
@@ -32,6 +32,7 @@ class UserService:
     
     async def list_users(self, session: AsyncSession, page_num:int = 1, page_size:int = 10, **kwargs):
         '''查询用户列表'''
+        logger.info(f'当前登录用户ID: {CTX_USER_ID.get()}')
         name = kwargs.get('name')
         mobile = kwargs.get('mobile')
         where = None
