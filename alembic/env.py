@@ -4,7 +4,16 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
+
+import os
+import sys
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../")
 from app.database.db import engine, Base
+from app.config import CONFIG
+# Dynamically import all models from the app/entity directory
+from app.util.import_util import import_models_from_directory
+import_models_from_directory(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'app', 'models'))
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -39,7 +48,7 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    url = config.get_main_option("sqlalchemy.url")
+    url = config.get_main_option("sqlalchemy.url", CONFIG.get('db_config').get('url'))
     context.configure(
         url=url,
         target_metadata=target_metadata,

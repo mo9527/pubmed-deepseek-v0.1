@@ -5,10 +5,10 @@ from sqlalchemy import (
     String,
 )
 import datetime
+from app.database.db import Base
 
-class BaseEntity:
+class BaseModel:
     """model的基类,所有model都必须继承"""
-    id = Column(Integer, primary_key=True)
     created_at = Column(DateTime, nullable=False, default=datetime.datetime.now)
     updated_at = Column(DateTime, nullable=False, default=datetime.datetime.now, onupdate=datetime.datetime.now)
     update_by = Column(String(255), nullable=True)

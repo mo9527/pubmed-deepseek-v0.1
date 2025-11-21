@@ -20,8 +20,11 @@ def list_gz_files():
     ftp.quit()
     return files
 
-if __name__ == "__main__":
+def main(payload:dict = None):
     files = list_gz_files()
     total_size = sum([f["size"] for f in files])
 
     print(f'总文件大小:{total_size:.2f} MB')
+    
+if __name__ == "__main__":
+    main()

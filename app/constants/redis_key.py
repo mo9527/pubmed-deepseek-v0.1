@@ -1,0 +1,1 @@
+KEY_SMS_CODE = 'SMS_CODE:{mobile}'

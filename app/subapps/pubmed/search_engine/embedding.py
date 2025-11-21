@@ -1,7 +1,7 @@
 from sentence_transformers import SentenceTransformer
 import numpy as np
 from typing import List, Union
-from app.config.config import CONFIG
+from ..config import CONFIG
 import os
 
 model_path = CONFIG.get('bge_m3_model').get('path')

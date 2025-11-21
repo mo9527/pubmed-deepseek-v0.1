@@ -3,13 +3,13 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 import sys
-from app.app_log import logger
+from app.util.app_log import logger
 
 # ----------------------------------------------------
 # ⚠️ 1. 导入配置模块 (假设 config.py 已经处理了环境选择)
 # ----------------------------------------------------
 try:
-    from app.config.config import CONFIG, CURRENT_ENV
+    from app.config import CONFIG, CURRENT_ENV
 except ImportError:
     print("FATAL ERROR: Could not import configuration module 'config'. Exiting.")
     sys.exit(1)
@@ -74,10 +74,6 @@ logger.info("SessionLocal factory created.")
 Base = declarative_base()
 
 
-# ----------------------------------------------------
-# 6. 辅助函数 (初始化/测试)
-# ----------------------------------------------------
-
 def check_db_connection():
     """测试数据库连接是否可用。"""
     try:
@@ -89,31 +85,16 @@ def check_db_connection():
         logger.error(f"Database connection test failed. Error: {e}")
         return False
 
-def init_db(check_before_create: bool = False):
-    """
-    初始化数据库（创建所有表）。
-    警告：仅用于开发环境或首次设置。
-    生产环境应使用 Alembic。
-    """
-    if check_before_create and not check_db_connection():
-        logger.warning("Skipping table creation: Database connection is unavailable.")
-        return
+def close_connection():
+    """关闭数据库连接。"""
+    engine.dispose()
+    logger.info("Database connection closed.")
 
-    logger.info("Attempting to create all declared database tables...")
-    
-    # ⚠️ 确保在此之前，所有模型文件都被导入，以便 Base.metadata 知道它们
-    # Base.metadata.create_all(bind=engine)
-    # logger.info("Database table creation process completed.")
-
-# ----------------------------------------------------
-# 7. 导出核心组件
-# ----------------------------------------------------
 
 __all__ = [
     "Base",
     "SessionLocal",
     "engine",
-    "init_db",
     "check_db_connection",
     "DATABASE_URL"
 ]

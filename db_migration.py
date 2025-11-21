@@ -15,24 +15,27 @@ def run_migrations_on_startup(max_retries=3, delay=5):
     print("--------------------------------------------------")
     
     project_root = os.path.dirname(os.path.abspath(__file__))
+    alembic_ini_path = os.path.join(project_root, ALEMBIC_CONFIG)
+    
+    print(f'alembic.ini路径：{alembic_ini_path}')
     
     for attempt in range(max_retries):
         try:
             result = subprocess.run(
-                [sys.executable, "-m", "alembic", "-c", ALEMBIC_CONFIG, "upgrade", "head"],
+                ["alembic", "-c", alembic_ini_path, "upgrade", "head"],
                 check=True,
                 capture_output=True, # 捕获输出
-                text=True,
-                cwd=os.path.abspath(os.path.join(project_root, '/migration_db')) # 假设脚本在子目录
+                text=True
             )
             
-            print(result)
+            print(result.stdout)
             print("Alembic 迁移成功！")
             return True
 
         except subprocess.CalledProcessError as e:
             print(f"迁移失败 (尝试 {attempt + 1}/{max_retries})：Alembic 命令执行失败。")
             # 可能是数据库服务尚未完全启动
+            print(f"错误信息: {e.stdout}")
             print(f"错误信息: {e.stderr}")
             if attempt < max_retries - 1:
                 print(f"等待 {delay} 秒后重试...")

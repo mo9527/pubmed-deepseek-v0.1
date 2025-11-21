@@ -3,9 +3,15 @@ import os
 import sys
 import re
 
-CONFIG_FILE = 'app/config/config.yaml'
+CONFIG_FILE = 'config.yaml'
 DEFAULT_ENV = 'test'
 CURRENT_ENV = os.environ.get('APP_ENV', DEFAULT_ENV)
+
+#读取当前目录下的config.yaml
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+sys.path.append(parent_dir)
+
 
 CONFIG = None
 
@@ -15,7 +21,9 @@ def load_config():
         return CONFIG
     
     try:
-        with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+        config_path = os.path.join(current_dir, CONFIG_FILE)
+        print(f'主配置文件：{config_path}')
+        with open(config_path, 'r', encoding='utf-8') as f:
             text = f.read()
             text = resolve_env(text)
             full_data = yaml.safe_load(text)
@@ -32,10 +40,10 @@ def load_config():
         return CONFIG
     except FileNotFoundError:
         print('配置文件未找到，程序退出')
-        sys.exit(0)
+        sys.exit(1)
     except Exception as e:
         print(f"加载配置时发生错误: {e}")
-        sys.exit(0)
+        sys.exit(1)
 
 def resolve_env(value):
     pattern = re.compile(r'\$\{([^}^{]+)\}')

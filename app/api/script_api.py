@@ -1,16 +1,10 @@
 from fastapi import APIRouter
-import json
-import asyncio
-from starlette.middleware.cors import CORSMiddleware
-import os
-import scripts
-from app.models import R
+from ..schemas.base_schema import R
 import importlib
-from app.config.config import CONFIG
 
-api_prefix = CONFIG.get('api_prefix')
 router = APIRouter(
-        tags=['script_api']
+        prefix='/script',
+        tags=['脚本服务']
     )
 
 @router.post("/run_script/{script_name}", response_model=R)
@@ -24,10 +18,10 @@ def execute_script(script_name: str, payload: dict):
         main_function = getattr(script_module, "main")
         execution_result = main_function(payload)
         
-        return R.success(execution_result)
+        return R.success_data(execution_result)
     except ModuleNotFoundError:
-        return R.fail(f"模块 '{script_name}' 不存在.")
+        return R.fail_msg(f"模块 '{script_name}' 不存在.")
     except AttributeError as e:
-        return R.fail(str(e))
+        return R.fail_msg(str(e))
     except Exception as e:
-        return R.fail(f'脚本发生未知错误：{str(e)}')
+        return R.fail_msg(f'脚本发生未知错误：{str(e)}')

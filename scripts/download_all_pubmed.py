@@ -4,9 +4,10 @@ import gzip
 import shutil
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+
 FTP_HOST = "ftp.ncbi.nlm.nih.gov"
 FTP_DIR = "/pubmed/baseline/"
-SAVE_DIR = "pubmed_baseline"     # 保存目录
+SAVE_DIR = "E:/pubmed_baseline"     # 保存目录
 MAX_WORKERS = 4                  
 
 os.makedirs(SAVE_DIR, exist_ok=True)
@@ -19,11 +20,13 @@ def connect_ftp():
     return ftp
 
 
-def list_pubmed_files():
+def list_pubmed_files(app_env):
     ftp = connect_ftp()
     files = [f for f in ftp.nlst() if f.endswith(".gz")]
     ftp.quit()
-    return files[:10] #test 取前10个文件
+    if app_env and app_env == 'test':
+        return files[:10] #test 环境取前10个文件
+    return files
 
 
 def download_with_resume(filename):
@@ -85,9 +88,10 @@ def unzip_gz(file_path):
             shutil.copyfileobj(f_in, f_out)
 
 
-def main():
+def main(payload:dict = None):
     print("连接到 NCBI PubMed FTP 服务器...")
-    files = list_pubmed_files()
+    app_env = os.getenv('APP_ENV', "test")
+    files = list_pubmed_files(app_env)
     print(f"找到 {len(files)} 个 baseline 文件。开始下载...")
 
     # 并发下载

@@ -136,8 +136,7 @@ def ingest_to_qdrant(articles, model, client):
     print("✅ 数据入库完成！")
 
 
-# --- 主执行逻辑 ---
-if __name__ == "__main__":
+def main(payload:dict = None):
     if not os.path.isdir(XML_ROOT_DIR):
         print(f"❌ 错误：XML 文件目录不存在或路径不正确: {XML_ROOT_DIR}")
         exit()
@@ -200,3 +199,8 @@ if __name__ == "__main__":
     print("\n--- 🏁 所有文件批次处理完成 ---")
     final_count = client.count(collection_name=COLLECTION_NAME, exact=True).count
     print(f"最终 Qdrant 集合 '{COLLECTION_NAME}' 中包含 {final_count} 个向量，共处理文章 {total_articles_ingested} 篇。")
+    
+    
+# --- 主执行逻辑 ---
+if __name__ == "__main__":
+    main()

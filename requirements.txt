@@ -12,3 +12,9 @@ PyYAML
 pymysql
 sqlalchemy
 alembic
+redis
+email-validator
+pyjwt
+slowapi>=0.1.9
+websockets>=15.0.1
+openai>=2.8.1

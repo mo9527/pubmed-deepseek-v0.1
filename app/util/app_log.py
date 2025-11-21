@@ -1,4 +1,3 @@
-# app_logger.py
 import logging
 import logging.handlers
 import os
@@ -7,7 +6,10 @@ import sys
 # 从您的配置单例模块中导入配置
 # 假设 config.py 已经成功加载了当前环境的配置到 CONFIG 变量
 try:
-    from app.config.config import CONFIG, CURRENT_ENV 
+    from app.config import CONFIG, CURRENT_ENV
+    current_path = os.path.dirname(os.path.abspath(__file__))
+    parent_path = os.path.dirname(current_path)
+    sys.path.append(parent_path)
 except ImportError:
     print("错误：无法从 config 模块导入配置。请确保 config.py 运行正常。")
     sys.exit(1)

@@ -1,7 +1,7 @@
 import numpy as np
-from app.embedding import embed_text
-from app.pubmed_client import search_pubmed
-from app.deepseek_client import ask_deepseek
+from .embedding import embed_text
+from .pubmed_client import search_pubmed
+from .deepseek_client import ask_deepseek
 
 def cosine_sim(a, b):
     return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
@@ -30,7 +30,6 @@ def build_prompt(question, articles):
             请你基于以上文献，用严谨的学术语气回答用户问题。
             在回答中引用文献时请使用 [ref:数字] 标注引用。
             以中文输出结果。
-            回答结束后请列出引用文献列表（包含PMID和标题）。
         """
     return prompt
 
