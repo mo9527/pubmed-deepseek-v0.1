@@ -10,6 +10,7 @@ qdrant-client
 lxml
 PyYAML
 pymysql
+aiomysql>=0.3.2
 sqlalchemy
 alembic
 redis
